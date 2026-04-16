@@ -1,0 +1,76 @@
+{
+    "display_name": "Yui",
+    "type": "2d",
+    "description": "活泼可爱的2D角色",
+    "model": {
+        "format": "live2d",
+        "path": "avatars/yui/model.moc3",
+        "textures": ["avatars/yui/texture_00.png"]
+    },
+    "motions": {
+        "idle": {
+            "name": "待机",
+            "file": "motions/idle.motion3.json",
+            "loop": true
+        },
+        "happy": {
+            "name": "高兴",
+            "file": "motions/happy.motion3.json",
+            "loop": false
+        },
+        "sad": {
+            "name": "悲伤",
+            "file": "motions/sad.motion3.json",
+            "loop": false
+        },
+        "wave": {
+            "name": "挥手",
+            "file": "motions/wave.motion3.json",
+            "loop": false
+        },
+        "dance": {
+            "name": "跳舞",
+            "file": "motions/dance.motion3.json",
+            "loop": true
+        },
+        "think": {
+            "name": "思考",
+            "file": "motions/think.motion3.json",
+            "loop": false
+        },
+        "excited": {
+            "name": "兴奋",
+            "file": "motions/excited.motion3.json",
+            "loop": false
+        },
+        "shy": {
+            "name": "害羞",
+            "file": "motions/shy.motion3.json",
+            "loop": false
+        }
+    },
+    "expressions": {
+        "neutral": {"name": "普通", "file": "expressions/neutral.exp.json"},
+        "happy": {"name": "开心", "file": "expressions/happy.exp.json"},
+        "sad": {"name": "难过", "file": "expressions/sad.exp.json"},
+        "surprised": {"name": "惊讶", "file": "expressions/surprised.exp.json"},
+        "angry": {"name": "生气", "file": "expressions/angry.exp.json"},
+        "shy": {"name": "害羞", "file": "expressions/shy.exp.json"},
+        "cute": {"name": "卖萌", "file": "expressions/cute.exp.json"}
+    },
+    "emotion_mapping": {
+        "happy": {"motion": "happy", "expression": "happy"},
+        "sad": {"motion": "sad", "expression": "sad"},
+        "angry": {"motion": "sad", "expression": "angry"},
+        "excited": {"motion": "excited", "expression": "happy"},
+        "shy": {"motion": "shy", "expression": "shy"},
+        "cute": {"motion": "happy", "expression": "cute"},
+        "bored": {"motion": "idle", "expression": "neutral"},
+        "thinking": {"motion": "think", "expression": "neutral"}
+    },
+    "display": {
+        "scale": 1.0,
+        "position": {"x": 0, "y": -0.2},
+        "opacity": 1.0
+    }
+}

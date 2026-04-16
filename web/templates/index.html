@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digidol - 智能虚拟角色</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; font-size: 2.5rem; }
+        
+        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .card h2 { color: #333; margin-bottom: 15px; font-size: 1.3rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        .api-keys { display: flex; gap: 15px; flex-wrap: wrap; }
+        .api-key-input { flex: 1; min-width: 200px; }
+        .api-key-input input { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .api-key-input label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
+        
+        .roles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .role-card { background: #f8f9fa; border-radius: 12px; padding: 15px; border: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
+        .role-card:hover { border-color: #667eea; transform: translateY(-2px); }
+        .role-card.active { border-color: #4caf50; background: #e8f5e9; }
+        .role-card h3 { color: #333; margin-bottom: 8px; }
+        .role-card p { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .role-card .badge { display: inline-block; padding: 4px 10px; background: #667eea; color: white; border-radius: 20px; font-size: 12px; }
+        .role-actions { margin-top: 10px; display: flex; gap: 5px; }
+        
+        .chat-area { display: flex; gap: 20px; flex-wrap: wrap; }
+        .chat-main { flex: 1; min-width: 500px; }
+        .chat-sidebar { width: 320px; }
+        
+        .avatar-display { text-align: center; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); border-radius: 12px; margin-bottom: 15px; min-height: 300px; position: relative; }
+        .avatar-sprite { font-size: 120px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .avatar-name { font-size: 24px; font-weight: bold; color: #333; margin-top: 10px; }
+        .avatar-status { color: #666; font-size: 14px; }
+        
+        .messages { height: 350px; overflow-y: auto; padding: 15px; background: #f8f9fa; border-radius: 12px; margin-bottom: 15px; }
+        .message { margin-bottom: 15px; padding: 12px 16px; border-radius: 12px; max-width: 80%; }
+        .message.user { background: #667eea; color: white; margin-left: auto; }
+        .message.assistant { background: white; border: 1px solid #ddd; }
+        .message .avatar { font-size: 24px; margin-right: 10px; }
+        .message .content { display: inline; }
+        .message .action { display: block; font-style: italic; color: #888; margin-top: 5px; font-size: 14px; }
+        
+        .input-area { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .input-area input { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .input-area button { padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        .input-area button:hover { background: #5568d3; }
+        .input-area .icon-btn { padding: 12px; font-size: 20px; }
+        
+        .sidebar-section { margin-bottom: 20px; }
+        .sidebar-section h3 { color: #333; margin-bottom: 10px; font-size: 16px; }
+        .memory-list { max-height: 150px; overflow-y: auto; }
+        .memory-item { background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+        
+        .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .skill-btn { padding: 10px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .skill-btn:hover { background: #667eea; color: white; }
+        
+        .btn { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-danger { background: #f44336; }
+        .btn-success { background: #4caf50; }
+        .btn-warning { background: #ff9800; }
+        .btn:hover { opacity: 0.9; }
+        
+        .hidden { display: none; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { padding: 10px 20px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; }
+        .tab.active { background: #667eea; color: white; }
+        
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
+        .modal h2 { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        
+        .json-editor { font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 8px; min-height: 200px; }
+        
+        .media-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+        .recording { animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .voice-selector { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .voice-selector select { padding: 8px; border-radius: 8px; border: 2px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Digidol - 智能虚拟角色</h1>
+        
+        <div class="card">
+            <h2>🔑 API Key 配置</h2>
+            <div class="api-keys">
+                <div class="api-key-input">
+                    <label>OpenAI API Key</label>
+                    <input type="password" id="openai-key" placeholder="sk-...">
+                </div>
+                <div class="api-key-input">
+                    <label>Anthropic API Key</label>
+                    <input type="password" id="anthropic-key" placeholder="sk-ant-...">
+                </div>
+                <div class="api-key-input">
+                    <label>Google API Key</label>
+                    <input type="password" id="google-key" placeholder="AIza...">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>
+                <span>👥 角色列表</span>
+                <button class="btn btn-sm" onclick="showCreateRoleModal()">+ 创建新角色</button>
+            </h2>
+            <div class="roles-grid" id="roles-grid"></div>
+        </div>
+        
+        <div id="chat-container" class="hidden">
+            <div class="chat-area">
+                <div class="chat-main">
+                    <div class="card">
+                        <h2 id="chat-title">💬 对话</h2>
+                        <div class="avatar-display" id="avatar-display">
+                            <div class="avatar-sprite" id="avatar-sprite">🎭</div>
+                            <div class="avatar-name" id="avatar-name">Yui</div>
+                            <div class="avatar-status" id="avatar-status">在线</div>
+                        </div>
+                        <div class="media-controls">
+                            <button class="btn btn-sm" id="mic-btn" onclick="toggleRecording()">🎤 语音输入</button>
+                            <button class="btn btn-sm" onclick="triggerFileInput('image-input')">📷 发送图片</button>
+                            <input type="file" id="image-input" hidden accept="image/*" onchange="handleImageUpload(event)">
+                            <button class="btn btn-sm" onclick="playLastResponse()">🔊 播放语音</button>
+                        </div>
+                        <div class="messages" id="messages"></div>
+                        <div class="input-area">
+                            <input type="text" id="user-input" placeholder="输入消息..." onkeypress="handleKeyPress(event)">
+                            <button onclick="sendMessage()">发送</button>
+                            <button class="btn btn-danger" onclick="stopChat()">停止</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-sidebar">
+                    <div class="card">
+                        <div class="tabs">
+                            <button class="tab active" onclick="showTab('memory')">记忆</button>
+                            <button class="tab" onclick="showTab('skills')">技能</button>
+                            <button class="tab" onclick="showTab('profile')">配置</button>
+                        </div>
+                        
+                        <div id="tab-memory">
+                            <div class="sidebar-section">
+                                <h3>🧠 短期记忆</h3>
+                                <div class="memory-list" id="short-memory"></div>
+                            </div>
+                            <div class="sidebar-section">
+                                <h3>💎 长期记忆</h3>
+                                <div class="memory-list" id="long-memory"></div>
+                                <button class="btn btn-sm" style="margin-top:10px; width:100%" onclick="addMemory()">+ 添加记忆</button>
+                            </div>
+                        </div>
+                        
+                        <div id="tab-skills" class="hidden">
+                            <div class="sidebar-section">
+                                <h3>🎭 动作表情</h3>
+                                <div class="skills-grid" id="skills-grid"></div>
+                            </div>
+                            <button class="btn btn-sm" style="width:100%; margin-top:10px;" onclick="editSkills()">编辑技能</button>
+                        </div>
+                        
+                        <div id="tab-profile" class="hidden">
+                            <div class="sidebar-section">
+                                <h3>👤 角色信息</h3>
+                                <div id="profile-info"></div>
+                                <button class="btn btn-sm" style="width:100%; margin-top:10px;" onclick="editProfile()">编辑角色</button>
+                            </div>
+                            <div class="sidebar-section">
+                                <h3>🎤 TTS语音</h3>
+                                <div class="voice-selector">
+                                    <select id="voice-select" onchange="changeVoice()">
+                                        <option value="zh-CN-XiaoxiaoNeural">晓晓 (女声)</option>
+                                        <option value="zh-CN-YunxiNeural">云希 (男声)</option>
+                                        <option value="zh-CN-YunyangNeural">云扬 (男声)</option>
+                                        <option value="zh-CN-XiaoyouNeural">晓悠 (童声)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="create-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>创建新角色</h2>
+            <div class="form-group">
+                <label>角色ID (英文)</label>
+                <input type="text" id="new-role-name" placeholder="例如: miku">
+            </div>
+            <div class="form-group">
+                <label>显示名称</label>
+                <input type="text" id="new-role-display" placeholder="例如: 初音未来">
+            </div>
+            <div class="form-group">
+                <label>性格描述</label>
+                <input type="text" id="new-role-personality" placeholder="例如: 活泼可爱">
+            </div>
+            <div class="form-group">
+                <label>性别</label>
+                <select id="new-role-gender">
+                    <option value="female">女</option>
+                    <option value="male">男</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>年龄</label>
+                <input type="number" id="new-role-age" value="18">
+            </div>
+            <div class="form-group">
+                <label>说话风格</label>
+                <textarea id="new-role-style" placeholder="例如: 声音甜美，喜欢用萌萌的语气"></textarea>
+            </div>
+            <div style="text-align:right;">
+                <button class="btn" onclick="createRole()">创建</button>
+                <button class="btn btn-danger" onclick="closeModal('create-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="edit-modal-title">编辑</h2>
+            <div class="form-group">
+                <label>JSON内容</label>
+                <textarea id="edit-json" class="json-editor"></textarea>
+            </div>
+            <div style="text-align:right;">
+                <button class="btn btn-success" onclick="saveEdit()">保存</button>
+                <button class="btn btn-danger" onclick="closeModal('edit-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSession = null;
+        let currentRole = null;
+        let socket = null;
+        let isRecording = false;
+        let lastAudioUrl = null;
+        
+        function init() {
+            loadRoles();
+            initSocket();
+        }
+        
+        function initSocket() {
+            socket = io();
+            socket.on('connect', () => console.log('Connected'));
+            socket.on('response', (data) => {
+                addMessage('assistant', data.text, data.action, data.emotion);
+            });
+        }
+        
+        async function loadRoles() {
+            const response = await fetch('/api/roles');
+            const roles = await response.json();
+            const grid = document.getElementById('roles-grid');
+            grid.innerHTML = roles.map(role => `
+                <div class="role-card ${role.active ? 'active' : ''}" onclick="startChat('${role.name}')">
+                    <h3>${role.display_name}</h3>
+                    <p>${role.personality}</p>
+                    <p>性别: ${role.gender} | 年龄: ${role.age}</p>
+                    <span class="badge">${role.active ? '运行中' : '离线'}</span>
+                    <div class="role-actions">
+                        <button class="btn btn-sm" onclick="event.stopPropagation(); editRole('${role.name}')">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteRole('${role.name}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function saveApiKeys() {
+            const providers = ['openai', 'anthropic', 'google'];
+            for (const provider of providers) {
+                const key = document.getElementById(`${provider}-key`).value;
+                if (key) {
+                    await fetch('/api/keys', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({provider, key})
+                    });
+                }
+            }
+        }
+        
+        document.querySelectorAll('.api-key-input input').forEach(input => {
+            input.addEventListener('change', saveApiKeys);
+        });
+        
+        async function startChat(roleName) {
+            const apiKey = document.getElementById('openai-key').value;
+            if (!apiKey) {
+                alert('请先输入API Key');
+                return;
+            }
+            
+            await saveApiKeys();
+            
+            const response = await fetch('/api/agent/start', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({role: roleName, provider: 'openai'})
+            });
+            
+            const data = await response.json();
+            if (data.session_id) {
+                currentSession = data.session_id;
+                currentRole = roleName;
+                loadChatInterface(roleName);
+                loadRoles();
+            } else {
+                alert('启动失败: ' + (data.error || '未知错误'));
+            }
+        }
+        
+        async function loadChatInterface(roleName) {
+            document.getElementById('chat-container').classList.remove('hidden');
+            document.getElementById('chat-title').textContent = `💬 与 ${roleName} 对话`;
+            document.getElementById('avatar-name').textContent = roleName;
+            
+            document.getElementById('avatar-sprite').textContent = '🎭';
+            document.getElementById('avatar-sprite').style.animation = 'float 3s ease-in-out infinite';
+            
+            await loadMemory();
+            await loadProfile();
+            await loadSkills();
+        }
+        
+        async function loadProfile() {
+            if (!currentRole) return;
+            const res = await fetch(`/api/roles/${currentRole}/profile`);
+            const profile = await res.json();
+            
+            document.getElementById('profile-info').innerHTML = `
+                <p><strong>显示名称:</strong> ${profile.display_name || ''}</p>
+                <p><strong>性格:</strong> ${profile.personality || ''}</p>
+                <p><strong>说话风格:</strong> ${profile.speaking_style || ''}</p>
+                <p><strong>喜好:</strong> ${JSON.stringify(profile.likes || {})}</p>
+            `;
+            
+            const voice = profile.custom_settings?.tts?.voice || 'zh-CN-XiaoxiaoNeural';
+            document.getElementById('voice-select').value = voice;
+        }
+        
+        async function loadSkills() {
+            if (!currentSession) return;
+            const res = await fetch(`/api/agent/${currentSession}/skills`);
+            const skills = await res.json();
+            
+            const skillsGrid = document.getElementById('skills-grid');
+            const allSkills = [];
+            if (skills.skills) {
+                for (const cat of Object.values(skills.skills)) {
+                    for (const s of Object.values(cat)) {
+                        allSkills.push(s);
+                    }
+                }
+            }
+            skillsGrid.innerHTML = allSkills.slice(0, 8).map(s => 
+                `<button class="skill-btn" onclick="triggerSkill('${s.name}')">${s.name}</button>`
+            ).join('');
+        }
+        
+        async function loadMemory() {
+            if (!currentSession) return;
+            const res = await fetch(`/api/agent/${currentSession}/memory`);
+            const mem = await res.json();
+            
+            document.getElementById('short-memory').innerHTML = mem.short_term.slice(-5).map(m => 
+                `<div class="memory-item">${m.role}: ${m.content.substring(0, 40)}...</div>`
+            ).join('') || '<p style="color:#999">暂无</p>';
+            
+            document.getElementById('long-memory').innerHTML = mem.long_term.important_memories?.slice(-3).map(m => 
+                `<div class="memory-item">${m.content}</div>`
+            ).join('') || '<p style="color:#999">暂无长期记忆</p>';
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message || !currentSession) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            const res = await fetch(`/api/agent/${currentSession}/chat`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message})
+            });
+            
+            const data = await res.json();
+            addMessage('assistant', data.response, data.action, data.emotion);
+            await loadMemory();
+            
+            if (data.emotion) {
+                animateAvatar(data.emotion);
+            }
+        }
+        
+        function addMessage(role, content, action = null, emotion = null) {
+            const msgs = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            let html = `<span class="avatar">${role === 'user' ? '👤' : '🎭'}</span>`;
+            html += `<span class="content">${content}</span>`;
+            if (action) html += `<span class="action">[${action}]</span>`;
+            div.innerHTML = html;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+        
+        function animateAvatar(emotion) {
+            const sprite = document.getElementById('avatar-sprite');
+            const emojis = {
+                'happy': '😊', 'sad': '😢', 'angry': '😠', 'excited': '🤩',
+                'shy': '😊', 'cute': '🥰', 'bored': '😐', 'thinking': '🤔'
+            };
+            sprite.textContent = emojis[emotion] || '🎭';
+            setTimeout(() => {
+                sprite.textContent = '🎭';
+            }, 2000);
+        }
+        
+        async function stopChat() {
+            if (currentSession) {
+                await fetch(`/api/agent/${currentSession}/stop`, {method: 'POST'});
+                currentSession = null;
+                currentRole = null;
+                document.getElementById('chat-container').classList.add('hidden');
+                loadRoles();
+            }
+        }
+        
+        async function addMemory() {
+            const content = prompt('输入记忆内容:');
+            if (content && currentSession) {
+                await fetch(`/api/agent/${currentSession}/memory`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({type: 'long', content, emotion: '中性'})
+                });
+                await loadMemory();
+            }
+        }
+        
+        async function triggerSkill(skillName) {
+            const sprite = document.getElementById('avatar-sprite');
+            sprite.style.animation = 'none';
+            sprite.offsetHeight;
+            sprite.style.animation = 'bounce 0.5s';
+            setTimeout(() => {
+                sprite.style.animation = 'float 3s ease-in-out infinite';
+            }, 500);
+        }
+        
+        function showTab(tabName) {
+            ['memory', 'skills', 'profile'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+            });
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+        
+        async function editProfile() {
+            if (!currentRole) return;
+            const res = await fetch(`/api/roles/${currentRole}/profile`);
+            const profile = await res.json();
+            
+            document.getElementById('edit-modal-title').textContent = '编辑角色配置';
+            document.getElementById('edit-json').value = JSON.stringify(profile, null, 2);
+            document.getElementById('edit-modal').classList.remove('hidden');
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+        
+        async function editSkills() {
+            if (!currentRole) return;
+            const res = await fetch(`/api/roles/${currentRole}/skills`);
+            const skills = await res.json();
+            
+            document.getElementById('edit-modal-title').textContent = '编辑技能配置';
+            document.getElementById('edit-json').value = JSON.stringify(skills, null, 2);
+            document.getElementById('edit-modal').classList.remove('hidden');
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+        
+        async function saveEdit() {
+            const json = document.getElementById('edit-json').value;
+            try {
+                JSON.parse(json);
+                const title = document.getElementById('edit-modal-title').textContent;
+                const endpoint = title.includes('角色') ? 'profile' : 'skills';
+                
+                await fetch(`/api/roles/${currentRole}/${endpoint}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: json
+                });
+                
+                closeModal('edit-modal');
+                if (endpoint === 'profile') await loadProfile();
+                else await loadSkills();
+                alert('保存成功');
+            } catch (e) {
+                alert('JSON格式错误: ' + e.message);
+            }
+        }
+        
+        function showCreateRoleModal() {
+            document.getElementById('create-modal').classList.remove('hidden');
+            document.getElementById('create-modal').style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        async function createRole() {
+            const profile = {
+                name: document.getElementById('new-role-name').value,
+                display_name: document.getElementById('new-role-display').value,
+                personality: document.getElementById('new-role-personality').value,
+                gender: document.getElementById('new-role-gender').value,
+                age: parseInt(document.getElementById('new-role-age').value) || 18,
+                speaking_style: document.getElementById('new-role-style').value,
+                likes: { food: [], games: [], music: [], movies: [] },
+                dislikes: [],
+                custom_settings: { tts: { voice: "zh-CN-XiaoxiaoNeural" } }
+            };
+            
+            await fetch('/api/roles', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: profile.name, profile})
+            });
+            
+            closeModal('create-modal');
+            loadRoles();
+        }
+        
+        async function editRole(roleName) {
+            currentRole = roleName;
+            await editProfile();
+        }
+        
+        async function deleteRole(roleName) {
+            if (confirm('确定删除角色 ' + roleName + '?')) {
+                await fetch(`/api/roles/${roleName}`, {method: 'DELETE'});
+                loadRoles();
+            }
+        }
+        
+        async function toggleRecording() {
+            const btn = document.getElementById('mic-btn');
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const mediaRecorder = new MediaRecorder(stream);
+                    const chunks = [];
+                    
+                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const blob = new Blob(chunks, { type: 'audio/webm' });
+                        const formData = new FormData();
+                        formData.append('audio', blob, 'recording.webm');
+                        
+                        const res = await fetch(`/api/agent/${currentSession}/asr`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await res.json();
+                        if (data.text) {
+                            document.getElementById('user-input').value = data.text;
+                        }
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.textContent = '⏹️ 停止录音';
+                    btn.classList.add('recording');
+                    window.currentRecorder = mediaRecorder;
+                } catch (e) {
+                    alert('无法访问麦克风: ' + e.message);
+                }
+            } else {
+                window.currentRecorder.stop();
+                isRecording = false;
+                btn.textContent = '🎤 语音输入';
+                btn.classList.remove('recording');
+            }
+        }
+        
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !currentSession) return;
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const res = await fetch(`/api/agent/${currentSession}/vision`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            
+            addMessage('user', '[图片] ' + (data.description || '图片描述'));
+            
+            const chatRes = await fetch(`/api/agent/${currentSession}/chat`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: '请描述这张图片: ' + (data.description || '')})
+            });
+            const chatData = await chatRes.json();
+            addMessage('assistant', chatData.response);
+        }
+        
+        async function changeVoice() {
+            const voice = document.getElementById('voice-select').value;
+            if (currentRole) {
+                const res = await fetch(`/api/roles/${currentRole}/profile`);
+                const profile = await res.json();
+                if (!profile.custom_settings) profile.custom_settings = {};
+                if (!profile.custom_settings.tts) profile.custom_settings.tts = {};
+                profile.custom_settings.tts.voice = voice;
+                
+                await fetch(`/api/roles/${currentRole}/profile`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(profile)
+                });
+            }
+        }
+        
+        async function playLastResponse() {
+            const msgs = document.querySelectorAll('.message.assistant');
+            if (msgs.length === 0) return;
+            
+            const lastMsg = msgs[msgs.length - 1];
+            const text = lastMsg.querySelector('.content').textContent;
+            
+            const res = await fetch(`/api/agent/${currentSession}/tts`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
+            });
+            
+            const data = await res.json();
+            if (data.audio_url) {
+                const audio = new Audio(data.audio_url);
+                audio.play();
+            }
+        }
+        
+        function triggerFileInput(inputId) {
+            document.getElementById(inputId).click();
+        }
+        
+        init();
+    </script>
+</body>
+</html>

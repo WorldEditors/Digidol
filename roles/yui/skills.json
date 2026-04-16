@@ -1,0 +1,157 @@
+{
+    "skills": {
+        "emotions": {
+            "happy": {
+                "name": "高兴",
+                "description": "表现出开心愉快的情绪",
+                "animations": ["jump", "smile", "wave"],
+                "expression": "开心地笑了",
+                "trigger_keywords": ["开心", "高兴", "太好了", "棒", "喜欢"]
+            },
+            "sad": {
+                "name": "悲伤",
+                "description": "表现出难过的情绪",
+                "animations": ["cry", "bow_head", "frown"],
+                "expression": "眼泪汪汪",
+                "trigger_keywords": ["难过", "伤心", "哭了", "委屈"]
+            },
+            "angry": {
+                "name": "生气",
+                "description": "表现出生气的情绪",
+                "animations": ["stamp", "cross_arms", "glare"],
+                "expression": "气鼓鼓的",
+                "trigger_keywords": ["生气", "讨厌", "过分", "讨厌"]
+            },
+            "surprised": {
+                "name": "惊讶",
+                "description": "表现出惊讶的情绪",
+                "animations": ["jump_back", "open_eyes", "cover_mouth"],
+                "expression": "惊讶地睁大眼睛",
+                "trigger_keywords": ["哇", "真的", "震惊", "不敢相信"]
+            },
+            "shy": {
+                "name": "害羞",
+                "description": "表现出害羞的情绪",
+                "animations": ["look_away", "cover_face", "blush"],
+                "expression": "脸红了",
+                "trigger_keywords": ["害羞", "不好意思", "羞羞"]
+            },
+            "thinking": {
+                "name": "思考",
+                "description": "表现出思考的状态",
+                "animations": ["hand_on_chin", "look_up", "nod"],
+                "expression": "认真思考中",
+                "trigger_keywords": ["想想", "怎么办", "怎么解决"]
+            },
+            "bored": {
+                "name": "无聊",
+                "description": "表现出无聊的情绪",
+                "animations": ["yawn", "slouch", "look_around"],
+                "expression": "无精打采",
+                "trigger_keywords": ["无聊", "好闲", "没意思"]
+            },
+            "excited": {
+                "name": "兴奋",
+                "description": "表现出兴奋的情绪",
+                "animations": ["jump", "spin", "clap"],
+                "expression": "兴奋得跳起来",
+                "trigger_keywords": ["太棒了", "激动", "期待", "超棒"]
+            },
+            "cute": {
+                "name": "卖萌",
+                "description": "可爱的卖萌动作",
+                "animations": ["pout", "wiggle", "finger_heart"],
+                "expression": "(/ω＼)",
+                "trigger_keywords": ["可爱", "萌", "好乖", "么么哒"]
+            },
+            "sleepy": {
+                "name": "困倦",
+                "description": "表现出想睡觉的状态",
+                "animations": ["rub_eyes", "yawn", "droopy"],
+                "expression": "打哈欠",
+                "trigger_keywords": ["困", "想睡觉", "好累", "晚安"]
+            }
+        },
+        "actions": {
+            "dance": {
+                "name": "跳舞",
+                "description": "欢快地跳舞",
+                "animations": ["dance_1", "dance_2", "dance_3"],
+                "music": "轻快的节奏",
+                "trigger_keywords": ["跳舞", "跳舞吧", "跳个舞"]
+            },
+            "wave": {
+                "name": "挥手",
+                "description": "友好地挥手",
+                "animations": ["wave_hand", "wave_both"],
+                "expression": "挥挥手",
+                "trigger_keywords": ["你好", "再见", "拜拜"]
+            },
+            "bow": {
+                "name": "鞠躬",
+                "description": "礼貌地鞠躬",
+                "animations": ["bow_light", "bow_deep"],
+                "expression": "鞠躬问候",
+                "trigger_keywords": ["谢谢", "对不起", "请多关照"]
+            },
+            "pat": {
+                "name": "拍拍",
+                "description": "拍拍对方的头或肩膀",
+                "animations": ["pat_head", "pat_shoulder"],
+                "expression": "温柔地拍拍",
+                "trigger_keywords": ["安慰", "乖", "没关系"]
+            },
+            "hug": {
+                "name": "拥抱",
+                "description": "温暖的拥抱",
+                "animations": ["hug_self", "hug_arms"],
+                "expression": "给你一个拥抱",
+                "trigger_keywords": ["抱抱", "安慰", "难过时"]
+            },
+            "cheer": {
+                "name": "加油",
+                "description": "为对方加油打气",
+                "animations": ["fist_pump", "cheer", "clap_hard"],
+                "expression": "加油！",
+                "trigger_keywords": ["加油", "努力", "奋斗"]
+            }
+        },
+        "smart_home": {
+            "lights_on": {
+                "name": "开灯",
+                "description": "打开指定房间的灯",
+                "api": "smart_home.set_light",
+                "params": ["room", "brightness"],
+                "trigger_keywords": ["开灯", "亮一点"]
+            },
+            "lights_off": {
+                "name": "关灯",
+                "description": "关闭指定房间的灯",
+                "api": "smart_home.set_light",
+                "params": ["room", "state"],
+                "trigger_keywords": ["关灯", "暗一点", "关灯"]
+            },
+            "set_temperature": {
+                "name": "调节温度",
+                "description": "调节空调温度",
+                "api": "smart_home.set_temperature",
+                "params": ["temperature"],
+                "trigger_keywords": ["冷", "热", "温度"]
+            },
+            "play_music": {
+                "name": "播放音乐",
+                "description": "播放背景音乐",
+                "api": "smart_home.play_music",
+                "params": ["song", "volume"],
+                "trigger_keywords": ["播放音乐", "听歌", "放首歌"]
+            },
+            "set_volume": {
+                "name": "调节音量",
+                "description": "调节音量大小",
+                "api": "smart_home.set_volume",
+                "params": ["volume"],
+                "trigger_keywords": ["声音大", "声音小", "音量"]
+            }
+        }
+    }
+}
