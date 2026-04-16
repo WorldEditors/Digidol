@@ -1,0 +1,26 @@
+{
+    "avatar_settings": {
+        "type": "2d",
+        "model_path": "avatars/yui/model.moc3",
+        "textures": ["avatars/yui/texture_00.png"],
+        "motions": {
+            "idle": "avatars/yui/motions/idle.motion3.json",
+            "happy": "avatars/yui/motions/happy.motion3.json",
+            "sad": "avatars/yui/motions/sad.motion3.json",
+            "wave": "avatars/yui/motions/wave.motion3.json",
+            "dance": "avatars/yui/motions/dance.motion3.json"
+        },
+        "expressions": {
+            "neutral": "avatars/yui/expressions/neutral.exp.json",
+            "happy": "avatars/yui/expressions/happy.exp.json",
+            "sad": "avatars/yui/expressions/sad.exp.json",
+            "surprised": "avatars/yui/expressions/surprised.exp.json"
+        }
+    },
+    "display_settings": {
+        "scale": 1.0,
+        "position": {"x": 0, "y": -0.5},
+        "opacity": 1.0,
+        "background": "transparent"
+    }
+}
