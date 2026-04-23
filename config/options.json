@@ -1,0 +1,17 @@
+{
+    "gender_options": ["male", "female", "unknown"],
+    "food_options": ["草莓蛋糕", "奶茶", "抹茶冰淇淋", "寿司", "咖啡", "炸鸡", "披萨", "汉堡", "拉面", "饺子", "巧克力", "冰淇淋"],
+    "game_options": ["塞尔达传说", "动物森友会", "原神", "策略游戏", "解谜游戏", "RPG", "MOBA", "FPS", "沙盒游戏", "音游"],
+    "music_options": ["J-POP", "动漫主题曲", "轻音乐", "电子音乐", "爵士", "古典", "摇滚", "流行", "民谣", "说唱"],
+    "movie_options": ["宫崎骏动画", "治愈系电影", "科幻片", "悬疑片", "纪录片", "动作片", "爱情片", "喜剧片", "恐怖片", "动画片"],
+    "dislike_options": ["恐怖片", "苦瓜", "蜘蛛", "孤独", "浪费时间", "无序", "虚伪", "烟酒", "大声喧哗", "排队"],
+    "tts_voice_options": [
+        {"name": "晓晓 (女声)", "value": "zh-CN-XiaoxiaoNeural"},
+        {"name": "云希 (男声)", "value": "zh-CN-YunxiNeural"},
+        {"name": "云扬 (男声)", "value": "zh-CN-YunyangNeural"},
+        {"name": "晓伊 (女声)", "value": "zh-CN-XiaoyiNeural"},
+        {"name": "念真 (女声)", "value": "zh-CN-NiannzhhenNeural"}
+    ],
+    "tts_rate_options": ["-50%", "-25%", "-10%", "+0%", "+10%", "+25%", "+50%"],
+    "tts_pitch_options": ["-50Hz", "-25Hz", "-10Hz", "+0Hz", "+10Hz", "+25Hz", "+50Hz"]
+}

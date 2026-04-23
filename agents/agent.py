@@ -22,37 +22,46 @@ def _parse_structured_response(raw: str) -> Dict[str, Any]:
 
 
 class VLMAgent:
-    def __init__(self, character: Character, api_key: str = None, model: str = "openai"):
+    def __init__(self, character: Character, config: dict = None, model: str = "kimi"):
         self.character = character
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.config = config or {}
         self.model = model
         self.client = None
         self._init_client()
 
-        # 让 MemoryStore 也能使用 API key 做 embedding
-        if self.api_key and model == "openai":
-            character.set_memory_store_api_key(self.api_key)
+        if self.config.get("api_key") and self.model in ["kimi", "deepseek", "qwen", "yi", "openai"]:
+            character.set_memory_store_api_key(self.config["api_key"])
 
     def _init_client(self):
-        if self.model == "openai":
-            try:
-                from openai import OpenAI
-                self.client = OpenAI(api_key=self.api_key)
-            except ImportError:
-                print("请安装openai库: pip install openai")
-        elif self.model == "anthropic":
+        if not self.config:
+            return
+
+        api_key = self.config.get("api_key")
+        api_base = self.config.get("api_base")
+
+        if not api_key:
+            print("警告: 未配置 API Key")
+            return
+
+        if self.model == "anthropic":
             try:
                 import anthropic
-                self.client = anthropic.Anthropic(api_key=self.api_key)
+                self.client = anthropic.Anthropic(api_key=api_key)
             except ImportError:
                 print("请安装anthropic库: pip install anthropic")
         elif self.model == "google":
             try:
                 import google.generativeai as genai
-                genai.configure(api_key=self.api_key)
+                genai.configure(api_key=api_key)
                 self.client = genai
             except ImportError:
                 print("请安装google-generativeai库")
+        else:
+            try:
+                from openai import OpenAI
+                self.client = OpenAI(api_key=api_key, base_url=api_base)
+            except ImportError:
+                print("请安装openai库: pip install openai")
 
     def generate_response(self, user_input: str, context: Dict = None) -> Dict[str, Any]:
         system_prompt = self.character.get_system_prompt()
@@ -92,27 +101,22 @@ class VLMAgent:
             return {"text": text, "action": action, "emotion": emotion}
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
+            display_name = self.character.profile.get("display_name", "助手")
             return {
-                "text": "抱歉，我现在有点累，让我休息一下...",
+                "text": f"抱歉，{display_name}现在有点累，让我休息一下...",
                 "action": None,
                 "emotion": "tired",
                 "error": str(e),
             }
 
     def _call_llm(self, system_prompt: str, conversation: List[Dict]) -> str:
-        if self.model == "openai":
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{"role": "system", "content": system_prompt}] + conversation,
-                temperature=0.8,
-                max_tokens=600,
-                response_format={"type": "json_object"},
-            )
-            return response.choices[0].message.content
+        model_name = self.config.get("model_name", "moonshot-v1-8k")
 
-        elif self.model == "anthropic":
+        if self.model == "anthropic":
             response = self.client.messages.create(
-                model="claude-sonnet-4-6",
+                model=model_name,
                 max_tokens=600,
                 system=system_prompt,
                 messages=conversation,
@@ -120,7 +124,7 @@ class VLMAgent:
             return response.content[0].text
 
         elif self.model == "google":
-            model = self.client.GenerativeModel("gemini-1.5-flash")
+            model = self.client.GenerativeModel(model_name)
             full_prompt = (
                 f"{system_prompt}\n\n"
                 f"对话历史：{json.dumps(conversation, ensure_ascii=False)}\n\n"
@@ -128,6 +132,16 @@ class VLMAgent:
             )
             response = model.generate_content(full_prompt)
             return response.text
+
+        elif self.client:
+            response = self.client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "system", "content": system_prompt}] + conversation,
+                temperature=0.8,
+                max_tokens=600,
+                response_format={"type": "json_object"},
+            )
+            return response.choices[0].message.content
 
         return json.dumps({"text": "暂不支持该模型", "emotion": "neutral", "action": None, "memory_to_save": None})
 

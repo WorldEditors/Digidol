@@ -11,3 +11,4 @@ SpeechRecognition>=3.10.0
 pyaudio>=0.2.13
 gTTS>=2.4.0
 python-dotenv>=1.0.0
+streamlit>=1.28.0

@@ -1,0 +1,47 @@
+{
+    "active_model": "kimi",
+    "models": {
+        "kimi": {
+            "name": "Kimi (Moonshot)",
+            "api_key": "",
+            "model_name": "moonshot-v1-8k",
+            "api_base": "https://api.moonshot.cn/v1",
+            "enabled": true
+        },
+        "glm": {
+            "name": "GLM (智谱)",
+            "api_key": "",
+            "model_name": "glm-4-flash",
+            "api_base": "https://open.bigmodel.cn/api/paas/v4",
+            "enabled": true
+        },
+        "deepseek": {
+            "name": "DeepSeek",
+            "api_key": "",
+            "model_name": "deepseek-chat",
+            "api_base": "https://api.deepseek.com/v1",
+            "enabled": true
+        },
+        "qwen": {
+            "name": "Qwen (通义)",
+            "api_key": "",
+            "model_name": "qwen-turbo",
+            "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "enabled": true
+        },
+        "yi": {
+            "name": "Yi (零一)",
+            "api_key": "",
+            "model_name": "yi-medium",
+            "api_base": "https://api.lingyiwanwu.com/v1",
+            "enabled": true
+        },
+        "openai": {
+            "name": "OpenAI",
+            "api_key": "",
+            "model_name": "gpt-4o",
+            "api_base": "https://api.openai.com/v1",
+            "enabled": true
+        }
+    }
+}

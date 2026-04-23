@@ -51,11 +51,13 @@ class Character:
 
     def save_short_term_memory(self):
         short_term_path = os.path.join(self.role_dir, "memory", "short_term.json")
+        os.makedirs(os.path.dirname(short_term_path), exist_ok=True)
         with open(short_term_path, "w", encoding="utf-8") as f:
             json.dump({"conversation_history": self.short_term_memory}, f, ensure_ascii=False, indent=2)
 
     def save_long_term_memory(self):
         long_term_path = os.path.join(self.role_dir, "memory", "long_term.json")
+        os.makedirs(os.path.dirname(long_term_path), exist_ok=True)
         with open(long_term_path, "w", encoding="utf-8") as f:
             json.dump(self.long_term_memory, f, ensure_ascii=False, indent=2)
 
